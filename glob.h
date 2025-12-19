@@ -12,31 +12,77 @@ bool glob(const char *pattern, const char *text);
 #ifdef RTB_GLOB_IMPL
 #undef RTB_GLOB_IMPL
 
-// TODO: Rewrite using switch instead of ifs.
+static void error_msg(const char *msg) {
+    fprintf(stderr, "glob: %s\n", msg);
+}
+
+#define CHAR_COUNT 256
+static bool charset[CHAR_COUNT];
+
+static void charset_reset(void) {
+    for (size_t i = 0; i < CHAR_COUNT; ++i)
+        charset[i] = 0;
+}
+
+static void charset_add(char c) {
+    charset[(size_t)c] = true;
+}
+
+static bool charset_contains(char c) {
+    return charset[(size_t)c];
+}
+
 // TODO: Add character escapes.
-// TODO: Add sets and ranges.
+// TODO: Add character ranges.
 bool glob(const char *pattern, const char *text) {
-    for (;;) {
-        if (*pattern == '\0' && *text == '\0') {
-            return true;
+    while (*pattern != '\0' && *text != '\0') {
+        switch (*pattern) {
+        case '?':
+            ++pattern;
+            ++text;
+            break;
 
-        } else if (*pattern == '?') {
-            if (*text == '\0') return false;
-            ++pattern; ++text;
-
-        } else if (*pattern == '*') {
-            const char *next; // next non-wildcard character in pattern
-            for (next = pattern; *next != '\0'; ++next)
-                if (*next != '?' && *next != '*')
-                    break;
-            while (*text != '\0' && *text != *next)
-                ++text;
-            pattern = next;
-
-        } else if (*pattern++ != *text++) {
+        case '*':
+            while (*pattern == '*')
+                ++pattern;
+            for (const char *t = text; *t; ++t)
+                if (glob(pattern, t))
+                    return true;
             return false;
+
+        case '[': {
+            charset_reset();
+            const char *next = pattern + 1;
+            while (*next && *next != ']') {
+                charset_add(*next);
+                ++next;
+            }
+            if (!*next || *next != ']') {
+                error_msg("missing closing bracket");
+                return false;
+            }
+            pattern = next + 1;
+            if (!charset_contains(*text))
+                return false;
+            ++text;
+        } break;
+
+        default:
+            if (*pattern != *text)
+                return false;
+            ++pattern;
+            ++text;
         }
     }
+
+    if (*pattern == '\0')
+        return *text == '\0';
+    if (*text == '\0') {
+        while (*pattern == '*')
+            ++pattern;
+        return *pattern == '\0';
+    }
+    return false;
 }
 
 #endif // RTB_GLOB_IMPL
