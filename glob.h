@@ -12,6 +12,8 @@ bool glob(const char *pattern, const char *text);
 #ifdef RTB_GLOB_IMPL
 #undef RTB_GLOB_IMPL
 
+// TODO: Rewrite using switch instead of ifs.
+// TODO: Add character escapes.
 // TODO: Add sets and ranges.
 bool glob(const char *pattern, const char *text) {
     for (;;) {
