@@ -3,12 +3,15 @@
 Find strings matching a pattern, similar to regular expressions.
 
 This is a single header file library for C. It is primarily composed of 2 files:
+
 - `glob.h`: Single header file library.
 - `glob.c`: Command-line program which... TODO
 
 To include `glob` in your C program:
+
 - `#define RTB_GLOB_IMPL` before `#include "glob.h"` in a single file.
 - Just `#include "glob.h"` everywhere else.
+
 See `glob.c` for an example.
 
 
@@ -23,12 +26,12 @@ modifications.
 - `*` (not in brackets) matches a string of zero or more characters.
 
 ### Sets/Ranges
-- [...], where the first character within the brackets is not '!', matches any
+- `[...]`, where the first character within the brackets is not `!`, matches any
   single character among the characters specified in the brackets. If the first
-  character within brackets is '!', then the [!...] matches any single character
-  that is not among the characters specified in the brackets.
-- The characters in the brackets may be a list ([abc]) or a range ([a-c]).
-- For the sake of simplicity, character classes (like [[:space:]], where the
+  character within brackets is `!`, then the `[!...]` matches any single
+  character that is not among the characters specified in the brackets.
+- The characters in the brackets may be a set (`[abc]`) or a range (`[a-c]`).
+- For the sake of simplicity, character classes (like `[[:space:]]`, where the
   inner brackets are part of the classname) are not supported.
 
 Source of above definitions (with slight modifications):
