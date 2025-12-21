@@ -5,6 +5,10 @@
 //
 // Version: 0.1.0
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 
 bool glob(const char *pattern, const char *text);
@@ -107,3 +111,7 @@ bool glob(const char *pattern, const char *text) {
 }
 
 #endif // RTB_GLOB_IMPL
+
+#ifdef __cplusplus
+}
+#endif
