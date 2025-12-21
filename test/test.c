@@ -21,7 +21,7 @@ void error(const char *msg) {
     exit(1);
 }
 
-List *list_push(List *list, Expect *exp) {
+List *list_push(List *list, const Expect *exp) {
     List *node = malloc(sizeof(List));
     if (!node) error("failed to malloc List node");
     node->expect = exp;
@@ -54,6 +54,7 @@ const Expect expects[] =  {
     { "?", "?", true },
     { "?", "1", true },
     { "?", "12", false },
+    { "??", "12", true },
     { "1?", "12", true },
     { "?2", "12", true },
     { "1?2", "123", false },
@@ -94,6 +95,9 @@ const Expect expects[] =  {
     { "*1*2*3", "123", true },
     { "*1*2*", "13", false },
     { "*123", "12123", true },
+    { "*12", "12123", false },
+    { "*1234", "12123", false },
+    { "*12*", "12123", true },
     { "*123*", "12123", true },
     { "123*", "12123", false },
     { "**123*", "12123", true },
@@ -101,7 +105,42 @@ const Expect expects[] =  {
     { "*1*2*3*", "132", false },
     { "*1*2*3*", "321", false },
 
+    // wildcard combinations
+    { "?*", "", false },
+    { "*?", "", false },
+    { "?*?", "", false },
+    { "*?*", "", false },
+    { "?*", "1", true },
+    { "*?", "1", true },
+    { "?*", "123", true },
+    { "*?", "123", true },
+    { "?*?", "1", false },
+    { "?*?", "12", true },
+    { "?*?", "123", true },
+    { "*?*", "123", true },
+    { "*???*", "123", true },
+    { "*????*", "123", false },
+
+    // TODO: ranges
     // sets and ranges
+    { "[]", "", true },
+    { "?[]", "", false },
+    { "[]?", "", false },
+    { "?[]?", "", false },
+    { "*[]", "", true },
+    { "[]*", "", true },
+    { "*[]*", "", true },
+    { "[1]", "1", true },
+    { "[1]", "2", false },
+    { "[12]", "1", true },
+    { "[12]", "2", true },
+    { "[1][2]", "1", false },
+    { "[1][2]", "2", false },
+    { "[1][2]", "12", true },
+    { "[12][12]", "12", true },
+    { "[][1]", "1", true },
+    { "[1][]", "1", true },
+    { "[][1][]", "1", true },
 
     // escaped characters
     { "\\", "\\", true },
@@ -115,7 +154,7 @@ const Expect expects[] =  {
 int main(void) {
     List *fail_list = NULL;
     for (size_t i = 0; i < sizeof(expects)/sizeof(*expects); ++i) {
-        Expect *exp = expects + i;
+        const Expect *exp = expects + i;
         if (glob(exp->pattern, exp->text) == exp->result) {
             printf("[PASS] ");
         } else {
@@ -125,12 +164,14 @@ int main(void) {
         printf("glob(\"%s\", \"%s\") == %s\n",
                exp->pattern, exp->text, exp->result ? "true" : "false");
     }
+
     if (fail_list == NULL) {
         printf("SUCCESS!\n");
     } else {
+        fail_list = list_reverse(fail_list);
         printf("FAILs:\n");
         while (fail_list != NULL) {
-            Expect *exp = fail_list->expect;
+            const Expect *exp = fail_list->expect;
             printf("  glob(\"%s\", \"%s\") == %s\n",
                    exp->pattern, exp->text, exp->result ? "true" : "false");
             fail_list = fail_list->next;
