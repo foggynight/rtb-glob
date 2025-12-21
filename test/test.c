@@ -40,7 +40,6 @@ List *list_reverse(List *list) {
     return prev;
 }
 
-// TODO: add test cases
 const Expect expects[] =  {
     // simple patterns
     { "", "", true },
@@ -121,7 +120,6 @@ const Expect expects[] =  {
     { "*???*", "123", true },
     { "*????*", "123", false },
 
-    // TODO: ranges
     // sets and ranges
     { "[]", "", true },
     { "?[]", "", false },
@@ -141,6 +139,42 @@ const Expect expects[] =  {
     { "[][1]", "1", true },
     { "[1][]", "1", true },
     { "[][1][]", "1", true },
+    { "[-]", "", false },
+    { "[-]", "-", true },
+    { "[-]", "1", false },
+    { "[1-]", "-", true },
+    { "[1-]", "0", false },
+    { "[1-]", "1", true },
+    { "[1-]", "2", false },
+    { "[-1]", "-", true },
+    { "[-1]", "0", false },
+    { "[-1]", "1", true },
+    { "[-1]", "2", false },
+    { "[1-2]", "-", false },
+    { "[1-2]", "0", false },
+    { "[1-2]", "1", true },
+    { "[1-2]", "2", true },
+    { "[1-2]", "3", false },
+    { "[1-3]", "0", false },
+    { "[1-3]", "1", true },
+    { "[1-3]", "2", true },
+    { "[1-3]", "3", true },
+    { "[1-3]", "4", false },
+    { "[-1-2]", "-", true },
+    { "[-1-2]", "-1", false },
+    { "[-1-2]", "0", false },
+    { "[-1-2]", "1", true },
+    { "[-1-2]", "2", true },
+    { "[-1-2]", "3", false },
+    { "[1-2-]", "-", true },
+    { "[1-2-]", "0", false },
+    { "[1-2-]", "1", true },
+    { "[1-2-]", "2", true },
+    { "[1-2-]", "3", false },
+    { "[a1-2]", "a", true },
+    { "[a1-2]", "b", false },
+    { "[1-2a]", "a", true },
+    { "[1-2a]", "b", false },
 
     // escaped characters
     { "\\", "\\", true },
@@ -153,7 +187,7 @@ const Expect expects[] =  {
 
 int main(void) {
     List *fail_list = NULL;
-    for (size_t i = 0; i < sizeof(expects)/sizeof(*expects); ++i) {
+    for (size_t i = 0; i < sizeof(expects) / sizeof(*expects); ++i) {
         const Expect *exp = expects + i;
         if (glob(exp->pattern, exp->text) == exp->result) {
             printf("[PASS] ");

@@ -32,7 +32,6 @@ static bool charset_contains(char c) {
     return charset[(size_t)c];
 }
 
-// TODO: Add character ranges. -- Don't forget set containing hyphen, e.g. [-]
 bool glob(const char *pattern, const char *text) {
     while (*pattern != '\0' && *text != '\0') {
         switch (*pattern) {
@@ -53,13 +52,25 @@ bool glob(const char *pattern, const char *text) {
 
         case '[': {
             const char *next = pattern + 1;
-            if (*next == ']') { // empty character set
+
+            // Empty character set, skip.
+            if (*next == ']') {
                 pattern = next + 1;
                 continue;
             }
+
+            // Populate character set with valid characters.
             charset_reset();
+            char prev;
             while (*next && *next != ']') {
-                charset_add(*next);
+                if (*next != '-' || next[-1] == '[' || next[1] == ']') {
+                    charset_add(*next);
+                } else {
+                    char range = next[1] - prev;
+                    for (char i = 1; i < range; ++i)
+                        charset_add(prev + i);
+                }
+                prev = *next;
                 ++next;
             }
             if (!*next || *next != ']') {
@@ -67,6 +78,8 @@ bool glob(const char *pattern, const char *text) {
                 return false;
             }
             pattern = next + 1;
+
+            // Check next character of text.
             if (!charset_contains(*text))
                 return false;
             ++text;
