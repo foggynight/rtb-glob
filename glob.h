@@ -32,7 +32,6 @@ static bool charset_contains(char c) {
     return charset[(size_t)c];
 }
 
-// TODO: Add character escapes.
 // TODO: Add character ranges.
 bool glob(const char *pattern, const char *text) {
     while (*pattern != '\0' && *text != '\0') {
@@ -45,6 +44,8 @@ bool glob(const char *pattern, const char *text) {
         case '*':
             while (*pattern == '*')
                 ++pattern;
+            if (*pattern == '\0')
+                return true;
             for (const char *t = text; *t; ++t)
                 if (glob(pattern, t))
                     return true;
@@ -72,6 +73,7 @@ bool glob(const char *pattern, const char *text) {
                 return false;
             ++pattern;
             ++text;
+            break;
         }
     }
 

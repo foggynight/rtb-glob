@@ -42,21 +42,98 @@ List *list_reverse(List *list) {
 
 // TODO: add test cases
 const Expect expects[] =  {
+    // simple patterns
+    { "", "", true },
+    { "", "1", false },
+    { "1", "", false },
     { "12", "123", false },
     { "123", "123", true },
+
+    // '?' patterns
+    { "?", "", false },
+    { "?", "?", true },
+    { "?", "1", true },
+    { "?", "12", false },
+    { "1?", "12", true },
+    { "?2", "12", true },
+    { "1?2", "123", false },
+    { "123", "123", true },
+    { "1?3", "123", true },
+    { "1??4", "1234", true },
+    { "12?", "123", true },
+    { "12?", "1234", false },
+    { "12??", "1234", true },
+    { "?2?", "123", true },
+
+    // '*' patterns
+    { "*", "", true },
+    { "***", "", true },
+    { "*", "*", true },
+    { "***", "*", true },
+    { "*", "1", true },
+    { "*", "12", true },
+    { "*", "123", true },
+    { "*1", "1", true },
+    { "**1", "1", true },
+    { "1*", "1", true },
+    { "1*3", "13", true },
+    { "1*3", "123", true },
+    { "1*4", "1234", true },
+    { "1*3", "1234", false },
+    { "1*3", "1234", false },
+    { "1**3", "1234", false },
+    { "1**3", "123", true },
+    { "12*", "12", true },
+    { "12*", "123", true },
+    { "12*", "1234", true },
+    { "12**", "12", true },
+    { "*12*", "12", true },
+    { "*12*", "123", true },
+    { "*1*2*", "123", true },
+    { "*1*2*", "123", true },
+    { "*1*2*3", "123", true },
+    { "*1*2*", "13", false },
+    { "*123", "12123", true },
+    { "*123*", "12123", true },
+    { "123*", "12123", false },
+    { "**123*", "12123", true },
+    { "**1*2*3**", "12123", true },
+    { "*1*2*3*", "132", false },
+    { "*1*2*3*", "321", false },
+
+    // sets and ranges
+
+    // escaped characters
+    { "\\", "\\", true },
+    { "\f", "\f",  true },
+    { "\n", "\n",  true },
+    { "\r", "\r",  true },
+    { "\t", "\t",  true },
+    { "\v", "\v",  true },
 };
 
 int main(void) {
     List *fail_list = NULL;
     for (size_t i = 0; i < sizeof(expects)/sizeof(*expects); ++i) {
-        Expect exp = expects[i];
-        printf("glob(\"%s\", \"%s\") == %s",
-               exp.pattern, exp.text, exp.result ? "true" : "false");
-        if (glob(exp.pattern, exp.text) == exp.result) {
-            printf(" [PASS]\n");
+        Expect *exp = expects + i;
+        if (glob(exp->pattern, exp->text) == exp->result) {
+            printf("[PASS] ");
         } else {
-            printf(" [FAIL]\n");
-            fail_list = list_push(fail_list, &exp);
+            printf("[FAIL] ");
+            fail_list = list_push(fail_list, exp);
+        }
+        printf("glob(\"%s\", \"%s\") == %s\n",
+               exp->pattern, exp->text, exp->result ? "true" : "false");
+    }
+    if (fail_list == NULL) {
+        printf("SUCCESS!\n");
+    } else {
+        printf("FAILs:\n");
+        while (fail_list != NULL) {
+            Expect *exp = fail_list->expect;
+            printf("  glob(\"%s\", \"%s\") == %s\n",
+                   exp->pattern, exp->text, exp->result ? "true" : "false");
+            fail_list = fail_list->next;
         }
     }
 }
